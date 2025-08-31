@@ -33,14 +33,18 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // import routes
-import authRoutes from "./routes/auth.routes.js"
+import authRoutes from "./routes/auth.route.js"
+import transactionRoutes from "./routes/transaction.route.js";
+import analyticRoutes from "./routes/analytics.route.js"
 
 // load routes
 app.use("/auth", authRoutes);
+app.use("/api/transactions", transactionRoutes)
+app.use("/api/analytics", analyticRoutes)
 
 //Test route
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Test route working fine!" });
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
 });
 
 export { app };
