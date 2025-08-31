@@ -19,6 +19,6 @@ const TransactionSchema = new mongoose.Schema(
 
 TransactionSchema.index({ userId: 1, date: -1 });
 TransactionSchema.index({ userId: 1, category: 1, date: -1 });
-TransactionSchema.index({ userId: 1, description: "text", merchant: "text", category: "text" });
+TransactionSchema.index({ description: "text", merchant: "text", category: "text" });
 
 export default mongoose.model("Transaction", TransactionSchema);

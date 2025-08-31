@@ -11,7 +11,7 @@ function buildDateFilter(from, to) {
 // GET /api/analytics/summary
 export async function getSummary(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { from, to } = req.query;
 
     const match = { userId };
@@ -42,7 +42,7 @@ export async function getSummary(req, res) {
 // GET /api/analytics/categories
 export async function getByCategory(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { from, to, type = "expense", limit = 20 } = req.query;
 
     const match = { userId, type };
@@ -66,7 +66,7 @@ export async function getByCategory(req, res) {
 // GET /api/analytics/trends
 export async function getTrends(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { from, to, granularity = "month" } = req.query;
 
     const match = { userId };

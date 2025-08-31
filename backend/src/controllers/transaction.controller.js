@@ -16,7 +16,7 @@ export async function parseTransaction(req, res) {
 
 export async function createTransaction(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const payload = req.body;
 
     // Minimal validation
@@ -31,13 +31,14 @@ export async function createTransaction(req, res) {
     });
     return res.status(201).json(doc);
   } catch (err) {
+    console.log(err)
     return res.status(500).json({ error: "Create failed" });
   }
 }
 
 export async function listTransactions(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const {
       from, to, category, type, q,
       sort = "-date",
@@ -75,7 +76,7 @@ export async function listTransactions(req, res) {
 
 export async function updateTransaction(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { id } = req.params;
     const payload = req.body;
 
@@ -91,11 +92,11 @@ export async function updateTransaction(req, res) {
 
 export async function deleteTransaction(req, res) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { id } = req.params;
     const doc = await Transaction.findOneAndDelete({ _id: id, userId });
     if (!doc) return res.status(404).json({ error: "Not found" });
-    return res.json({ ok: true });
+    return res.status(200).json({ message: "transaction deleted" });
   } catch (err) {
     return res.status(500).json({ error: "Delete failed" });
   }
