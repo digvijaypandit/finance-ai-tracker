@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Landing from "./pages/LandingPage.jsx";
+import Login from "./pages/LoginPage.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import { useEffect, useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [dark, setDark] = useState(false);
+
+  // Initialize theme based on localStorage or system preference
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      setDark(savedTheme === "dark");
+    } else {
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setDark(systemPrefersDark);
+    }
+  }, []);
+
+  // Apply theme and save to localStorage
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [dark]);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Header dark={dark} setDark={setDark} />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

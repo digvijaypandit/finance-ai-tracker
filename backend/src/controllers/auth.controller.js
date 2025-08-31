@@ -32,7 +32,20 @@ export const googleCallback = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.redirect("http://localhost:5173//dashboard");
+    res.send(`
+  <script>
+    window.opener.postMessage({
+      type: "LOGIN_SUCCESS",
+      user: {
+        id: "${req.user._id}",
+        email: "${req.user.email}",
+        name: "${req.user.name}",
+        picture: "${req.user.picture}"
+      }
+    }, "http://localhost:5173");
+    window.close();
+  </script>
+`);
   } catch (err) {
     console.error(err);
     res.redirect("/login");
