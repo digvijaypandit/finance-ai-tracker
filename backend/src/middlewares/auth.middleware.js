@@ -4,20 +4,23 @@ import { User } from "../models/user.model.js";
 export const verifyJWT = async (req, res, next) => {
   try {
     const token = req.cookies?.accessToken;
-    if (!token) return res.status(401).json({ error: "Unauthorized - No token provided" });
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized - No token provided" });
+    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Ensure user still has refresh token (i.e., not logged out)
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id).select("-password");
     if (!user || !user.refreshToken) {
-      return res.status(401).json({ error: "Unauthorized - Logged out" });
+      return res.status(401).json({ error: "Unauthorized - User logged out" });
     }
 
-    req.user = decoded;
+    req.user = user;
     next();
   } catch (err) {
-    console.error("❌ JWT verification failed:", err.message);
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: "Unauthorized - Token expired" });
+    }
     return res.status(401).json({ error: "Unauthorized - Invalid token" });
   }
 };

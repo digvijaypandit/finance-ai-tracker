@@ -1,109 +1,220 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+// Dashboard.jsx
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { toggleTheme } from "../store/themeSlice";
+import api from "../api/axios";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { useSelector } from "react-redux";
-import { PieChart, TrendingUp } from "lucide-react";
+import TransactionForm from "../components/TransactionForm";
+import TransactionList from "../components/TransactionList";
+import SummaryCards from "../components/SummaryCards";
+import CategoryPieChart from "../components/CategoryPieChart";
+import SpendingTrendChart from "../components/SpendingTrendChart";
 
-export default function Dashboard() {
+const Dashboard = () => {
+  const dispatch = useDispatch();
   const isDark = useSelector((state) => state.theme.isDark);
-  const [userData, setUserData] = useState(null);
-  const [message, setMessage] = useState("Checking login...");
 
-  // Example overview data (replace with real API later)
-  const overviewData = [
-    { title: "Income", amount: "$4,200", color: "text-green-500" },
-    { title: "Expenses", amount: "$2,850", color: "text-red-500" },
-    { title: "Savings", amount: "$1,350", color: "text-blue-500" },
-  ];
+  const [transactions, setTransactions] = useState([]);
+  const [summary, setSummary] = useState({ income: 0, expenses: 0, savings: 0 });
+  const [categories, setCategories] = useState([]);
+  const [trends, setTrends] = useState([]);
+  const [filters, setFilters] = useState({
+    from: "",
+    to: "",
+    type: "",
+    category: "",
+    sort: "-date",
+  });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 5,
+    totalPages: 1,
+  });
 
-  // Example transactions (replace with real API later)
-  const transactions = [
-    { id: 1, description: "Bought coffee", category: "Food & Drink", amount: "-$6.50", date: "2025-08-30" },
-    { id: 2, description: "Salary", category: "Income", amount: "+$4,200", date: "2025-08-28" },
-    { id: 3, description: "Groceries", category: "Food & Drink", amount: "-$120.00", date: "2025-08-27" },
-  ];
+  const [parsingResult, setParsingResult] = useState(null);
+
+  // Fetch transactions
+  const fetchTransactions = async (page = 1, newFilters = filters) => {
+    try {
+      const res = await api.get("/api/transactions", {
+        params: {
+          page,
+          limit: pagination.limit,
+          ...newFilters,
+        },
+      });
+      setTransactions(res.data.data || []);
+      setPagination(res.data.pagination || { page: 1, limit: 5, totalPages: 1 });
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+    }
+  };
+
+  // Fetch summary
+  const fetchSummary = async () => {
+    try {
+      const res = await api.get("/api/analytics/summary");
+      setSummary(res.data);
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+    }
+  };
+
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/api/analytics/categories");
+      setCategories(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+    }
+  };
+
+  // Fetch trends
+  const fetchTrends = async () => {
+    try {
+      const res = await api.get("/api/analytics/trends");
+      setTrends(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching trends:", err);
+    }
+  };
+
+  // Handle filters
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
+    fetchTransactions(1, newFilters);
+  };
+
+  // Handle add transaction (parse first)
+  const handleParseTransaction = async (text) => {
+    try {
+      const res = await api.post("/api/transactions/parse", { text });
+      setParsingResult(res.data.parsed); // Show preview
+    } catch (err) {
+      console.error("Error parsing transaction:", err);
+    }
+  };
+
+  // Confirm & save transaction
+  const handleSaveTransaction = async () => {
+    if (!parsingResult) return;
+    try {
+      await api.post("/api/transactions", parsingResult);
+      setParsingResult(null); // clear preview
+      fetchTransactions(1, filters);
+      fetchSummary();
+      fetchCategories();
+      fetchTrends();
+    } catch (err) {
+      console.error("Error saving transaction:", err);
+    }
+  };
+
+  // Edit transaction
+  const handleEditTransaction = async (id, updated) => {
+    try {
+      await api.put(`/api/transactions/${id}`, updated);
+      fetchTransactions(pagination.page, filters);
+    } catch (err) {
+      console.error("Error editing transaction:", err);
+    }
+  };
+
+  // Delete transaction
+  const handleDeleteTransaction = async (id) => {
+    try {
+      await api.delete(`/api/transactions/${id}`);
+      fetchTransactions(pagination.page, filters);
+      fetchSummary();
+      fetchCategories();
+      fetchTrends();
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+    }
+  };
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/auth/profile", { withCredentials: true })
-      .then((res) => {
-        setUserData(res.data.profile);
-        setMessage(`Hello, ${res.data.profile.name || "User"}`);
-      })
-      .catch(() => {
-        setMessage("Not logged in");
-      });
+    fetchTransactions(1);
+    fetchSummary();
+    fetchCategories();
+    fetchTrends();
   }, []);
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
+    <div
+      className={`p-6 min-h-screen transition-colors duration-300 ${
+        isDark ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+      }`}
+    >
       <Header />
 
-      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        {/* User Profile */}
-        {userData && (
-          <div className={`flex items-center space-x-6 mb-12 p-6 rounded-2xl shadow-lg ${isDark ? "bg-gray-800" : "bg-white"}`}>
-            <img src={userData.picture} alt={userData.picture} className="w-20 h-20 rounded-full" />
-            <div>
-              <h2 className="text-2xl font-semibold">{userData.name}</h2>
-              <p className="text-gray-400">{userData.email}</p>
-              <p className="text-sm text-gray-500">Joined: {new Date(userData.createdAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-        )}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <button
+          onClick={() => dispatch(toggleTheme())}
+          className="px-4 py-2 rounded bg-indigo-500 text-white hover:bg-indigo-600"
+        >
+          Toggle {isDark ? "Light" : "Dark"}
+        </button>
+      </div>
 
-        {/* Overview Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {overviewData.map((item, index) => (
-            <div key={index} className={`p-6 rounded-2xl shadow-lg transition-colors duration-300 ${isDark ? "bg-gray-800" : "bg-white"}`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">{item.title}</h3>
-                <TrendingUp className={`w-6 h-6 ${item.color}`} />
-              </div>
-              <p className={`text-2xl font-bold ${item.color}`}>{item.amount}</p>
-            </div>
-          ))}
-        </div>
+      {/* Summary */}
+      <SummaryCards summary={summary} />
 
-        {/* Transactions Table */}
-        <div className={`overflow-x-auto rounded-2xl shadow-lg mb-12 ${isDark ? "bg-gray-800" : "bg-white"}`}>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr className={`${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
-                <th className="px-6 py-3 text-left text-sm font-medium">Description</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Category</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Amount</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {transactions.map((tx) => (
-                <tr key={tx.id}>
-                  <td className="px-6 py-4">{tx.description}</td>
-                  <td className="px-6 py-4">{tx.category}</td>
-                  <td className={`px-6 py-4 font-semibold ${tx.amount.startsWith("-") ? "text-red-500" : "text-green-500"}`}>{tx.amount}</td>
-                  <td className="px-6 py-4">{tx.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <CategoryPieChart categories={categories} />
+        <SpendingTrendChart trends={trends} />
+      </div>
 
-        {/* Analytics Section */}
-        <div className={`p-6 rounded-2xl shadow-lg ${isDark ? "bg-gray-800" : "bg-white"}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Spending by Category</h3>
-            <PieChart className="w-6 h-6 text-blue-500" />
-          </div>
-          <div className="h-64 flex items-center justify-center text-gray-400">
-            {/* Placeholder for chart */}
-            <p>Chart will go here (use Chart.js or Recharts)</p>
-          </div>
-        </div>
-      </main>
+      {/* Transaction Form */}
+      <div className="mt-10">
+        <TransactionForm
+          onSubmit={handleParseTransaction}
+          parsingResult={parsingResult}
+          onConfirm={handleSaveTransaction}
+          onCancel={() => setParsingResult(null)}
+        />
+      </div>
 
-      <Footer />
+      {/* Transaction List */}
+      <div className="mt-8">
+        <TransactionList
+          transactions={transactions}
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+        />
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-8">
+        <button
+          disabled={pagination.page <= 1}
+          onClick={() => fetchTransactions(pagination.page - 1)}
+          className={`px-3 py-1 rounded disabled:opacity-50 transition-colors duration-300 ${
+            isDark ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-900"
+          }`}
+        >
+          Previous
+        </button>
+
+        <span>{`Page ${pagination.page} of ${pagination.totalPages}`}</span>
+
+        <button
+          disabled={pagination.page >= pagination.totalPages}
+          onClick={() => fetchTransactions(pagination.page + 1)}
+          className={`px-3 py-1 rounded disabled:opacity-50 transition-colors duration-300 ${
+            isDark ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-900"
+          }`}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

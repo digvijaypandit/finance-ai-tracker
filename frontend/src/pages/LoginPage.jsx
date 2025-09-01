@@ -8,15 +8,17 @@ function Login() {
   const navigate = useNavigate();
   const isDark = useSelector((state) => state.theme.isDark);
 
+  const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
   const handleGooglePopup = () => {
     const popup = window.open(
-      "http://localhost:8000/auth/google",
+      `${backendUrl}/auth/google`,
       "googleLogin",
       "width=500,height=600"
     );
 
     window.addEventListener("message", (event) => {
-      if (event.origin !== "http://localhost:8000") return;
+      if (event.origin !==  `${backendUrl}`) return;
 
       if (event.data.type === "LOGIN_SUCCESS") {
         dispatch(loginSuccess(event.data.user));
