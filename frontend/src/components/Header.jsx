@@ -4,7 +4,7 @@ import { Sun, Moon, TrendingUp, LogOut, RefreshCw } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../store/themeSlice";
 import { logoutUser } from "../store/authSlice";
-import apiInstance from "../api/axios"; // <-- axios instance
+import apiInstance from "../api/axios";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -25,11 +25,10 @@ export default function Header() {
   const handleRefreshToken = async () => {
     try {
       await apiInstance.get("/auth/refresh");
-      console.log("Access token refreshed manually ✅");
-      alert("Access token refreshed successfully ✅");
+      alert("Access token refreshed successfully");
     } catch (error) {
       console.error("Manual refresh failed:", error);
-      alert("Failed to refresh token ❌");
+      alert("Failed to refresh token");
     }
   };
 
@@ -57,66 +56,72 @@ export default function Header() {
           </div>
 
           {/* Navigation */}
-          {isAuthenticated && (
-            <div className="flex items-center space-x-4">
-              {/* Theme toggle */}
-              <button
-                onClick={() => dispatch(toggleTheme())}
-                className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                  isDark
-                    ? "bg-gray-800 hover:bg-gray-700"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-              >
-                {isDark ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-              </button>
+          <div className="flex items-center space-x-4">
+            {/* Theme toggle - always visible */}
+            <button
+              onClick={() => dispatch(toggleTheme())}
+              className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+                isDark
+                  ? "bg-gray-800 hover:bg-gray-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
 
-              {/* Refresh Token Button with Tooltip */}
-              <div className="relative group">
-                <button
-                  onClick={handleRefreshToken}
-                  className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                    isDark
-                      ? "bg-blue-800 hover:bg-blue-700 text-white"
-                      : "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                  }`}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
-                <div className="absolute right-0 mt-2 w-max px-3 py-1 rounded-md shadow-lg bg-gray-800 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                  Refresh Access Token
-                </div>
-              </div>
-
-              {/* Profile Image with tooltip */}
-              {user && (
+            {isAuthenticated ? (
+              <>
+                {/* Refresh Token Button */}
                 <div className="relative group">
-                  <img
-                    src={user.profile.picture || "/default-avatar.png"}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full border-2 border-gray-300 cursor-pointer"
-                  />
-                  <div className="absolute right-0 mt-2 w-max px-4 py-2 rounded-lg shadow-lg bg-gray-800 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="font-semibold">{user.profile.name}</p>
-                    <p className="text-gray-300">{user.profile.email}</p>
+                  <button
+                    onClick={handleRefreshToken}
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+                      isDark
+                        ? "bg-blue-800 hover:bg-blue-700 text-white"
+                        : "bg-blue-100 hover:bg-blue-200 text-blue-800"
+                    }`}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <div className="absolute right-0 mt-2 w-max px-3 py-1 rounded-md shadow-lg bg-gray-800 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                    Refresh Access Token
                   </div>
                 </div>
-              )}
 
-              {/* Logout */}
+                {/* Profile Image */}
+                {user && (
+                  <div className="relative group">
+                    <img
+                      src={user.profile.picture || "/default-avatar.png"}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full border-2 border-gray-300 cursor-pointer"
+                    />
+                    <div className="absolute right-0 mt-2 w-max px-4 py-2 rounded-lg shadow-lg bg-gray-800 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="font-semibold">{user.profile.name}</p>
+                      <p className="text-gray-300">{user.profile.email}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 cursor-pointer rounded-lg flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white transition"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              /* Login button for non-authenticated users */
               <button
-                onClick={handleLogout}
-                className="px-4 py-2 cursor-pointer rounded-lg flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white transition"
+                onClick={() => navigate("/login")}
+                className="px-4 py-2 cursor-pointer rounded-lg bg-green-500 hover:bg-green-600 text-white transition"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
+                Login
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </header>
