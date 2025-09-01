@@ -1,9 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Sun, Moon, TrendingUp, LogOut } from "lucide-react";
+import { Sun, Moon, TrendingUp, LogOut, RefreshCw } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../store/themeSlice";
 import { logoutUser } from "../store/authSlice";
+import apiInstance from "../api/axios"; // <-- axios instance
 
 export default function Header() {
   const navigate = useNavigate();
@@ -11,12 +12,24 @@ export default function Header() {
   const isDark = useSelector((state) => state.theme.isDark);
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  const handleRefreshToken = async () => {
+    try {
+      await apiInstance.get("/auth/refresh");
+      console.log("Access token refreshed manually ✅");
+      alert("Access token refreshed successfully ✅");
+    } catch (error) {
+      console.error("Manual refresh failed:", error);
+      alert("Failed to refresh token ❌");
     }
   };
 
@@ -62,11 +75,28 @@ export default function Header() {
                 )}
               </button>
 
+              {/* Refresh Token Button with Tooltip */}
+              <div className="relative group">
+                <button
+                  onClick={handleRefreshToken}
+                  className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+                    isDark
+                      ? "bg-blue-800 hover:bg-blue-700 text-white"
+                      : "bg-blue-100 hover:bg-blue-200 text-blue-800"
+                  }`}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+                <div className="absolute right-0 mt-2 w-max px-3 py-1 rounded-md shadow-lg bg-gray-800 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                  Refresh Access Token
+                </div>
+              </div>
+
               {/* Profile Image with tooltip */}
               {user && (
                 <div className="relative group">
                   <img
-                    src={user.profile.picture|| "/default-avatar.png"}
+                    src={user.profile.picture || "/default-avatar.png"}
                     alt="Profile"
                     className="w-10 h-10 rounded-full border-2 border-gray-300 cursor-pointer"
                   />

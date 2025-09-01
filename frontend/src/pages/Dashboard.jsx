@@ -27,7 +27,7 @@ const Dashboard = () => {
   });
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 5,
+    limit: 20,
     totalPages: 1,
   });
 
