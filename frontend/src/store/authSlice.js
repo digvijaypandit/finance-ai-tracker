@@ -1,17 +1,28 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../api/axios"; // axios instance with withCredentials: true
 
-// 🔹 Thunk to fetch user profile from backend
+// Fetch current user based on cookie
 export const fetchProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, thunkAPI) => {
     try {
-      const res = await axios.get("http://localhost:8000/auth/profile", {
-        withCredentials: true,
-      });
-      return res.data;
+      const res = await axios.get("/auth/profile"); // cookies sent automatically
+      return res.data; // { user info }
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data || "Error fetching profile");
+      return thunkAPI.rejectWithValue(err.response?.data || null);
+    }
+  }
+);
+
+// Logout
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, thunkAPI) => {
+    try {
+      await axios.post("/auth/logout");
+      return true;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || "Error logging out");
     }
   }
 );
@@ -27,10 +38,6 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    loginStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
     loginSuccess: (state, action) => {
       state.user = action.payload;
       state.isAuthenticated = true;
@@ -40,29 +47,35 @@ const authSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
-    logout: (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
+    loginStart: (state) => {
+      state.loading = true;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProfile.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.loading = false;
       })
-      .addCase(fetchProfile.rejected, (state, action) => {
-        state.error = action.payload;
+      .addCase(fetchProfile.rejected, (state) => {
+        state.user = null;
         state.isAuthenticated = false;
         state.loading = false;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
+export const { loginSuccess, loginFailure, loginStart } = authSlice.actions;
 export default authSlice.reducer;
