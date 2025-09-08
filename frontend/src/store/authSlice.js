@@ -1,18 +1,23 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "../api/axios"; // axios instance with withCredentials: true
+import axios from "axios";
 
-// Fetch current user based on cookie
 export const fetchProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, thunkAPI) => {
     try {
-      const res = await axios.get("/auth/profile"); // cookies sent automatically
+      const res = await axios.get(
+        import.meta.env.VITE_API_URL + "/auth/profile",
+        {
+          withCredentials: true, // ⚡ Important for cookies
+        }
+      );
       return res.data; // { user info }
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || null);
     }
   }
 );
+
 
 // Logout
 export const logoutUser = createAsyncThunk(
