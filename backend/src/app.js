@@ -10,10 +10,11 @@ const app = express();
 // CORS config
 app.use(
   cors({
-    origin: "https://finance-ai-tracker-alpha.vercel.app/",
+    origin: "https://finance-ai-tracker-alpha.vercel.app",
     credentials: true,
   })
 );
+
 
 // Middlewares
 app.use(express.json({ limit: "16kb" }));
