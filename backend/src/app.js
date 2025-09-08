@@ -10,7 +10,7 @@ const app = express();
 // CORS config
 app.use(
   cors({
-    origin: process.env.URL,
+    origin: "https://finance-ai-tracker-alpha.vercel.app/",
     credentials: true,
   })
 );
