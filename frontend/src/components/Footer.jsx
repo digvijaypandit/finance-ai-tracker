@@ -19,7 +19,7 @@ export default function Footer() {
           </div>
 
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            © 2025 FinanceAI. Simplifying finances with AI.
+            © 2025 FinanceAI. Simplifying finances with AI. Developed by Digvijay.
           </p>
         </div>
       </div>

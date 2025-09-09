@@ -17,37 +17,15 @@ export const googleCallback = async (req, res) => {
     req.user.refreshToken = refreshToken;
     await req.user.save();
 
-    // Set cookies (httpOnly)
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-      domain: "finance-ai-tracker-6gpa.onrender.com",
-      maxAge: 15 * 60 * 1000,
-    });
+    // Instead of setting cookies, send tokens as custom headers
+    res.setHeader("accessToken", accessToken);
+    res.setHeader("refreshToken", refreshToken);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-      domain: "finance-ai-tracker-6gpa.onrender.com",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    // Optionally, send a JSON response body as well
+    res.json({
+      message: "Tokens sent in headers",
     });
-
-    res.send(`
-  <script>
-    window.opener.postMessage({
-      type: "LOGIN_SUCCESS",
-      user: {
-        id: "${req.user._id}",
-        email: "${req.user.email}",
-        name: "${req.user.name}",
-        picture: "${req.user.picture}"
-      }
-    }, "http://localhost:5173");
-    window.close();
-  </script>
-`);
+    
   } catch (err) {
     console.error(err);
     res.redirect("/login");

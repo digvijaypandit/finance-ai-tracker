@@ -18,10 +18,11 @@ function Login() {
     );
 
     window.addEventListener("message", (event) => {
-      if (event.origin !==  `${backendUrl}`) return;
+      if (event.origin !== `${backendUrl}`) return;
 
       if (event.data.type === "LOGIN_SUCCESS") {
-        dispatch(loginSuccess(event.data.user));
+        // event.data should now include { user, accessToken, refreshToken }
+        dispatch(loginSuccess(event.data));
         navigate("/dashboard");
       } else {
         dispatch(loginFailure("Google login failed"));
@@ -56,8 +57,8 @@ function Login() {
           <button
             onClick={handleGooglePopup}
             className={`flex items-center justify-center w-full py-4 px-6 mb-6 border text-lg rounded-lg shadow transition transform hover:scale-105 active:scale-95 cursor-pointer ${isDark
-                ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
               }`}
           >
             <img

@@ -1,16 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance"; 
 
+// Fetch profile using header-based token
 export const fetchProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, thunkAPI) => {
     try {
-      const res = await axios.get(
-        import.meta.env.VITE_API_URL + "/auth/profile",
-        {
-          withCredentials: true, // ⚡ Important for cookies
-        }
-      );
+      const res = await axiosInstance.get("/auth/profile");
       return res.data; // { user info }
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || null);
@@ -18,13 +14,15 @@ export const fetchProfile = createAsyncThunk(
   }
 );
 
-
-// Logout
+// Logout user
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, thunkAPI) => {
     try {
-      await axios.post("/auth/logout");
+      // Optionally call backend to invalidate refresh token
+      await axiosInstance.post("/auth/logout");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       return true;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || "Error logging out");
@@ -44,9 +42,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     loginSuccess: (state, action) => {
-      state.user = action.payload;
+      const { user, accessToken, refreshToken } = action.payload;
+      state.user = user;
       state.isAuthenticated = true;
       state.loading = false;
+      state.error = null;
+
+      // Store tokens in localStorage
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
     },
     loginFailure: (state, action) => {
       state.error = action.payload;

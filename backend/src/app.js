@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
-import session from "express-session";
 import passport from "passport";
 import "./config/passport.js";
 
@@ -15,17 +13,15 @@ app.use(
   })
 );
 
-
 // Middlewares
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(cookieParser());
 
 if (process.env.NODE_ENV === "production") {
   app.set('trust proxy', 1);
 }
 
-// Session middleware (required for passport-google-oauth20)
+// Session middleware (needed for OAuth strategies like passport-google-oauth20)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "secret123",
@@ -33,9 +29,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: 'none',
-      domain: "finance-ai-tracker-6gpa.onrender.com"
     }
   })
 );
@@ -43,17 +38,17 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// import routes
-import authRoutes from "./routes/auth.route.js"
+// Import routes
+import authRoutes from "./routes/auth.route.js";
 import transactionRoutes from "./routes/transaction.route.js";
-import analyticRoutes from "./routes/analytics.route.js"
+import analyticRoutes from "./routes/analytics.route.js";
 
-// load routes
+// Load routes
 app.use("/auth", authRoutes);
-app.use("/api/transactions", transactionRoutes)
-app.use("/api/analytics", analyticRoutes)
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/analytics", analyticRoutes);
 
-//Test route
+// Test route
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
