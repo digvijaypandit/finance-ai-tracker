@@ -51,7 +51,8 @@ export const googleCallback = async (req, res) => {
 // Refresh token
 export const refreshAccessToken = async (req, res) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    // Get refresh token from headers (from frontend)
+    const refreshToken = req.headers["x-refresh-token"];
     if (!refreshToken) return res.status(400).json({ message: "No refresh token provided" });
 
     const user = await User.findOne({ refreshToken });
@@ -63,14 +64,7 @@ export const refreshAccessToken = async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
-    });
-
-    res.status(200).json({ message: "Access token refreshed" });
+    res.status(200).json({ accessToken: newAccessToken });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -80,7 +74,7 @@ export const refreshAccessToken = async (req, res) => {
 // Logout user by deleting refresh token
 export const logout = async (req, res) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    const refreshToken = req.headers["x-refresh-token"];
     if (!refreshToken) {
       return res.status(400).json({ message: "No refresh token provided" });
     }
@@ -90,13 +84,8 @@ export const logout = async (req, res) => {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 
-    // Remove refresh token in DB
     user.refreshToken = null;
     await user.save();
-
-    // Clear cookies
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
 
     res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
@@ -104,3 +93,4 @@ export const logout = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+

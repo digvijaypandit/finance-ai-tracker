@@ -4,7 +4,7 @@ import { Sun, Moon, TrendingUp, LogOut, RefreshCw } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../store/themeSlice";
 import { logoutUser } from "../store/authSlice";
-import apiInstance from "../api/axios";
+import apiInstance, { refreshToken } from "../api/axios";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -15,7 +15,18 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutUser()).unwrap();
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (refreshToken) {
+        await apiInstance.post("/auth/logout", null, {
+          headers: { "x-refresh-token": refreshToken },
+        });
+      }
+
+      // Clear frontend tokens
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      dispatch(logoutUser());
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -24,21 +35,21 @@ export default function Header() {
 
   const handleRefreshToken = async () => {
     try {
-      await apiInstance.get("/auth/refresh");
+      await refreshToken();
       alert("Access token refreshed successfully");
     } catch (error) {
-      console.error("Manual refresh failed:", error);
-      alert("Failed to refresh token");
+      alert("Failed to refresh token. Please log in again.");
+      console.log(error)
     }
   };
 
+
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b transition-colors duration-300 ${
-        isDark
-          ? "bg-gray-900/80 border-gray-700"
-          : "bg-white/80 border-gray-200"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b transition-colors duration-300 ${isDark
+        ? "bg-gray-900/80 border-gray-700"
+        : "bg-white/80 border-gray-200"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
@@ -60,11 +71,10 @@ export default function Header() {
             {/* Theme toggle - always visible */}
             <button
               onClick={() => dispatch(toggleTheme())}
-              className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                isDark
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              }`}
+              className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isDark
+                ? "bg-gray-800 hover:bg-gray-700"
+                : "bg-gray-100 hover:bg-gray-200"
+                }`}
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -75,11 +85,10 @@ export default function Header() {
                 <div className="relative group">
                   <button
                     onClick={handleRefreshToken}
-                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                      isDark
-                        ? "bg-blue-800 hover:bg-blue-700 text-white"
-                        : "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                    }`}
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isDark
+                      ? "bg-blue-800 hover:bg-blue-700 text-white"
+                      : "bg-blue-100 hover:bg-blue-200 text-blue-800"
+                      }`}
                   >
                     <RefreshCw className="w-4 h-4" />
                   </button>

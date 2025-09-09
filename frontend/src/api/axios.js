@@ -29,18 +29,24 @@ instance.interceptors.request.use(
 // Function to refresh token
 export const refreshToken = async () => {
   try {
-    const response = await instance.get("/auth/refresh");
-    const { accessToken } = response.data;
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) throw new Error("No refresh token stored");
 
+    const response = await instance.post("/auth/refresh", null, {
+      headers: { "x-refresh-token": refreshToken },
+    });
+
+    const { accessToken } = response.data;
     if (accessToken) {
       storeAccessToken(accessToken);
       console.log("Access token refreshed");
-    } else {
-      console.warn("No access token returned during refresh");
     }
   } catch (error) {
     console.error("Failed to refresh token:", error);
-    // Optionally: redirect to login page here
+    // Force logout if refresh fails
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    window.location.href = "/login";
   }
 };
 
