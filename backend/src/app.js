@@ -21,6 +21,10 @@ app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 
+if (process.env.NODE_ENV === "production") {
+  app.set('trust proxy', 1);
+}
+
 // Session middleware (required for passport-google-oauth20)
 app.use(
   session({
