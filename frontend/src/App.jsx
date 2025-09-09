@@ -16,6 +16,18 @@ function App() {
     dispatch(fetchProfile());
   }, [dispatch]);
 
+  useEffect(() => {
+    console.log(
+      "%cDIGVIJAY PANDIT",
+      "color: white; background: blue; font-size: 24px; font-weight: bold; padding: 4px;"
+    );
+    console.warn(
+      "%cThis app is for assessment purposes only. Not for commercial use.",
+      "color: black; background: yellow; font-size: 14px; padding: 2px;"
+    );
+
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
