@@ -34,7 +34,8 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: true,
-      sameSite: 'none'
+      sameSite: 'none',
+      domain: "finance-ai-tracker-6gpa.onrender.com"
     }
   })
 );
