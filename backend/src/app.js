@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import passport from "passport";
 import "./config/passport.js";
+import session from "express-session";
 
 const app = express();
 
