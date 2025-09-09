@@ -17,15 +17,31 @@ export const googleCallback = async (req, res) => {
     req.user.refreshToken = refreshToken;
     await req.user.save();
 
-    // Instead of setting cookies, send tokens as custom headers
-    res.setHeader("accessToken", accessToken);
-    res.setHeader("refreshToken", refreshToken);
+    const user = {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+    };
 
-    // Optionally, send a JSON response body as well
-    res.json({
-      message: "Tokens sent in headers",
-    });
-    
+    // Send an HTML page that posts message back to opener
+    res.send(`
+      <html>
+        <body>
+          <script>
+            window.opener.postMessage(
+              {
+                type: "LOGIN_SUCCESS",
+                user: ${JSON.stringify(user)},
+                accessToken: "${accessToken}",
+                refreshToken: "${refreshToken}"
+              },
+              "${process.env.CORS_ORIGIN || "http://localhost:5173"}"
+            );
+            window.close();
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
     console.error(err);
     res.redirect("/login");

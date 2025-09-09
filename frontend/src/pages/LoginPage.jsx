@@ -17,17 +17,20 @@ function Login() {
       "width=500,height=600"
     );
 
-    window.addEventListener("message", (event) => {
-      if (event.origin !== `${backendUrl}`) return;
+    // Define listener once
+    const handleMessage = (event) => {
+      if (event.origin !== backendUrl) return;
 
       if (event.data.type === "LOGIN_SUCCESS") {
-        // event.data should now include { user, accessToken, refreshToken }
         dispatch(loginSuccess(event.data));
         navigate("/dashboard");
+        window.removeEventListener("message", handleMessage); // cleanup
       } else {
         dispatch(loginFailure("Google login failed"));
       }
-    });
+    };
+
+    window.addEventListener("message", handleMessage);
   };
 
   return (
