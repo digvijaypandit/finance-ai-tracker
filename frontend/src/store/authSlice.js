@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axiosInstance from "../utils/axiosInstance"; 
+import axiosInstance from "../api/axios"; 
 
 // Fetch profile using header-based token
 export const fetchProfile = createAsyncThunk(
